@@ -1,9 +1,11 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { Http, RequestOptions , HttpModule } from '@angular/http';
+import { Http, RequestOptions } from '@angular/http';
 import { Observable, Subscription } from 'rxjs/Rx';
 import { NgForm } from '@angular/forms';
 import { ResponseContentType } from '@angular/http';
+import { User } from '../blank-page/user.model';
+
 
 
 import 'rxjs/add/observable/interval';
@@ -17,6 +19,8 @@ import { HttpserviceService } from './httpservice.service';
     styleUrls: ['./blank-page.component.scss']
 })
 export class BlankPageComponent implements OnInit {
+     
+    user1 = new User();
 
     val = 0;
     isFail = false;
@@ -27,33 +31,40 @@ export class BlankPageComponent implements OnInit {
     isAuthenticated;
     GUID;
 
-
     constructor(private http: HttpClient, private service: HttpserviceService, private httpold: Http) { }
     ngOnInit() {
+
         const downloadUrl = 'blank';
         // this.val = 70;
         console.log(this.val);
         console.log(this.isFail);
+        this.username = sessionStorage.getItem('username');
+        this.isAuthenticated = sessionStorage.getItem('isAuthenticated');
+        this.isAuthorized = sessionStorage.getItem('isAuthorized');
+        this.GUID = sessionStorage.getItem('GUID');
+        console.log(this.username);
+        console.log(this.isAuthenticated);
+        console.log(this.isAuthorized);
+    
+        console.log(this.GUID);
+
 
     }
 
     sendToDB() {
-        this.username = sessionStorage.getItem('username');
-        this.isAuthenticated = sessionStorage.getItem('isAuthorized');
-        this.isAuthorized = sessionStorage.getItem('isAuthenticated');
-        const Application = 'Process Scan Tool';
-        this.GUID = sessionStorage.getItem('GUID');
 
-        const body2 = ' <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ins="http://xmlns.oracle.com/pcbpel/adapter/db/insertLog"><soapenv:Header/><soapenv:Body><ins:insertLogInput><ins:GUID>' + this.GUID + '</ins:GUID><ins:UserName>' + this.username + '</ins:UserName> <ins:Application>' + Application + '</ins:Application> <ins:IsAuthorized>' + this.isAuthorized + '</ins:IsAuthorized><ins:IsAuthenticate>' + this.isAuthenticated + '</ins:IsAuthenticate><ins:Description>' + 'string' + '</ins:Description><ins:User_Operation>' + 'string' + '</ins:User_Operation></ins:insertLogInput></soapenv:Body></soapenv:Envelope>';
-        this.http.post( 'stg-ibs.corporate.ge.com/UserAuthenticationProject/Services/ProxyService/EntryLogWrapper', body2, { responseType: 'text' }).subscribe
-        (data => {
-            console.log(data);
+
+        const body2 = ' <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ins="http://xmlns.oracle.com/pcbpel/adapter/db/insertLog"><soapenv:Header/><soapenv:Body><ins:insertLogInput><ins:GUID>' + this.GUID + '</ins:GUID><ins:UserName>' + this.username + '</ins:UserName> <ins:Application>TDDBuilder</ins:Application> <ins:IsAuthorized>' + this.isAuthorized + '</ins:IsAuthorized><ins:IsAuthenticate>' + this.isAuthenticated + '</ins:IsAuthenticate><ins:Description>TDDGenerator</ins:Description><ins:User_Operation>TDDGenerator</ins:User_Operation></ins:insertLogInput></soapenv:Body></soapenv:Envelope>';
+        this.http.post('http://stg-ibs.corporate.ge.com/UserAuthenticationProject/Services/ProxyService/EntryLogWrapper', body2, { responseType: 'text' }).subscribe
+            (data => {
+            console.log('Pushed data to DB', data);
         },
         err => {
             console.log( err);
         }
         );
     }
+
     getJenkinsXML(no) {
         this.http.get('http://alpmdmappdvn01.corporate.ge.com:8008/job/GEProcessScanTool/' + no + '/api/xml', { responseType: 'text' })
             .subscribe(
@@ -109,7 +120,6 @@ export class BlankPageComponent implements OnInit {
                 }
             );
     }
-
 
     download(no, op) {
         console.log(no, op);
