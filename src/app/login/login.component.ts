@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { routerTransition } from '../router.animations';
 import { NgForm } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-
+import { UUID } from 'angular2-uuid';
 @Component({
     selector: 'app-login',
     templateUrl: './login.component.html',
@@ -15,6 +15,10 @@ export class LoginComponent implements OnInit {
     isFail = false;
     isSuccess = false;
     isLoad = false;
+    username;
+    isAuthorized;
+    isAuthenticated;
+    GUID;
 
     constructor(public router: Router, private http: HttpClient) {
     }
@@ -53,16 +57,20 @@ export class LoginComponent implements OnInit {
 
                 sessionStorage.setItem('isAuthorized', str3);
                 sessionStorage.setItem('isAuthenticated', str);
+                console.log(str);
+                console.log(str2);
+                console.log(str3);
+
                 
                 let uuid = UUID.UUID();
                 sessionStorage.setItem('GUID', uuid);
-               
+                console.log(sessionStorage.getItem('GUID'));
 
                 // console.log(str2);
                 // Store
                 sessionStorage.setItem('username', str2);
                 // console.log(sessionStorage.getItem("username"));
-                if (str === 'true') {
+                if (str === 'true' && str3 === 'true') {
                     sessionStorage.setItem('isLoggedin', 'true');
                     this.isSuccess = true;
                     this.router.navigate(['/dashboard']);
@@ -80,6 +88,22 @@ export class LoginComponent implements OnInit {
             }
             );
 
+            this.loginToDB();
+    }
+    loginToDB() {
+        this.username = sessionStorage.getItem('username');
+        this.isAuthenticated = sessionStorage.getItem('isAuthenticated');
+        this.isAuthorized = sessionStorage.getItem('isAuthorized');
+        this.GUID = sessionStorage.getItem('GUID');
+        const body2 = ' <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ins="http://xmlns.oracle.com/pcbpel/adapter/db/insertLog"><soapenv:Header/><soapenv:Body><ins:insertLogInput><ins:GUID>' + this.GUID + '</ins:GUID><ins:UserName>' + this.username + '</ins:UserName> <ins:Application>TDDBuilder</ins:Application> <ins:IsAuthorized>' + this.isAuthorized + '</ins:IsAuthorized><ins:IsAuthenticate>' + this.isAuthenticated + '</ins:IsAuthenticate><ins:Description></ins:Description><ins:User_Operation></ins:User_Operation></ins:insertLogInput></soapenv:Body></soapenv:Envelope>';
+        this.http.post('http://stg-ibs.corporate.ge.com/UserAuthenticationProject/Services/ProxyService/EntryLogWrapper', body2, { responseType: 'text' }).subscribe
+        (data => {
+            console.log('Login to DB', data);
+        },
+        err => {
+            console.log( err);
+        }
+    );
     }
 
     onLoggedin(form: NgForm) {
